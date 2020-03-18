@@ -66,6 +66,7 @@ headnum = nil
 require_media = false
 outdir = "."
 html_template = nil
+words = []
 
 opt.on("-r [retweets]") {|v|
   mode = :rt
@@ -76,6 +77,7 @@ opt.on("-f [favorites]") {|v|
   limit = v.to_i if v
 }
 opt.on("-m") {|v| require_media = true }
+opt.on("-p phrase") {|v| words.push v }
 opt.on("-M") { non_reply = true }
 opt.on("-R") { non_rt = true }
 opt.on("-s split_count") {|v| split_by = v }
@@ -101,6 +103,8 @@ end
 tweets.delete_if {|i| !(i["entities"] && i["entities"]["media"] && !i["entities"]["media"].empty?) } if require_media
 tweets.delete_if {|i| i["full_text"] =~ /\ART @[a-zA-Z0-9_]+:/ && !i["entities"]["user_mentions"].empty? } if non_rt
 tweets.delete_if {|i| i["in_reply_to_user_id"] && !i["in_reply_to_user_id"].empty? } if non_reply
+
+tweets.delete_if {|i| !(words.any? {|w| i["full_text"].downcase.include?(w.downcase) }) } unless words.empty?
 
 tweets.sort_by! {|i| i["retweet_count"].to_i }.reverse! if mode == :rt
 tweets.sort_by! {|i| i["retweet_count"].to_i }.reverse! if mode == :fv
