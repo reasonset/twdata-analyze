@@ -17,7 +17,7 @@ Create tweets listed HTML with sorting.
 * Run script
 
 ```
-twdata-sorting.rb [options] <your_screen_name>
+twdata-sorting.rb [options]
 ```
 
 This script outs `TweetChunk_NNNNN.html` files.
@@ -39,11 +39,10 @@ This script outs `TweetChunk_NNNNN.html` files.
 ### Example
 
 ```bash
-twdata-sorting.rb -r 10 -M -t 100 reasonset
+twdata-sorting.rb -r 10 -M -t 100
 ```
 
 * Sort by retweet.
 * Filter tweet have retweet count less than 10.
 * Exclude reply.
 * 100 tweets per out file.
-* I'm `reasonset`

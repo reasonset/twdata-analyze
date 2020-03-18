@@ -85,7 +85,9 @@ opt.on("-h template") {|v| html_template = File.read(v) }
 
 opt.parse!(ARGV)
 
-screen_name = ARGV.shift or abort "Your screen name is not given."
+account = File.read("account.js").sub(/\A.*? = /, "") 
+account = JSON.load(account)
+screen_name = account[0]["account"]["username"]
 
 twdata = File.read("tweet.js").sub(/\A.*? = /, "")
 tweets = JSON.load(twdata)
