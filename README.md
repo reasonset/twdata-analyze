@@ -33,3 +33,15 @@ This script outs `TweetChunk_NNNNN.html` files.
 |`-R`||Exclude retweet|
 |`-s`|Split count|Count of tweets par file (default 300.) If less than `1` given, don't split.|
 |`-t`|Tweet count|Out only top n tweets|
+
+### Example
+
+```bash
+twdata-sorting.rb -r 10 -M -t 100 reasonset
+```
+
+* Sort by retweet.
+* Filter tweet have retweet count less than 10.
+* Exclude reply.
+* 100 tweets per out file.
+* I'm `reasonset`
