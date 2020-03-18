@@ -33,6 +33,8 @@ This script outs `TweetChunk_NNNNN.html` files.
 |`-R`||Exclude retweet|
 |`-s`|Split count|Count of tweets par file (default 300.) If less than `1` given, don't split.|
 |`-t`|Tweet count|Out only top n tweets|
+|`-o`|Directory|Use specify output directory|
+|`-h`|Template file|Use specify eRuby template file|
 
 ### Example
 

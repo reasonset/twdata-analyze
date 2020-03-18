@@ -64,6 +64,8 @@ non_rt = nil
 split_by = 300
 headnum = nil
 require_media = false
+outdir = "."
+html_template = nil
 
 opt.on("-r [retweets]") {|v|
   mode = :rt
@@ -78,6 +80,8 @@ opt.on("-M") { non_reply = true }
 opt.on("-R") { non_rt = true }
 opt.on("-s split_count") {|v| split_by = v }
 opt.on("-t count") {|v| headnum = v.to_i}
+opt.on("-o outdir") {|v| outdir = v }
+opt.on("-h template") {|v| html_template = File.read(v) }
 
 opt.parse!(ARGV)
 
@@ -108,8 +112,8 @@ split_by = tweets.length if split_by < 1
 0.upto(tweets.length / split_by) do |split_num|
   break if split_num * split_by >= tweets.length
   tweets_chunk = tweets[(split_num * split_by), split_by]
-  File.open("TweetChunk_#{sprintf('%05d', split_num)}.html", "w") do |f|
-    erb = ERB.new(TEMPLATE, trim_mode: "%")
+  File.open(File.join(outdir, "TweetChunk_#{sprintf('%05d', split_num)}.html"), "w") do |f|
+    erb = ERB.new((html_template || TEMPLATE), trim_mode: "%")
     f.puts erb.result(binding)
   end
 end
