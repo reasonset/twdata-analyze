@@ -13,31 +13,41 @@ TEMPLATE = <<'EOF'
 .tweet_text {
   white-space: pre-wrap;
 }
+.tweet_head {
+  font-size: 80%;
+  background-color: #ccf;
+}
+.counts {
+  font-size: 125%;
+  font-weight: bold;
+}
+table {
+  width: 100%;
+  margin-bottom: 0.75em;
+}
     </style>
   </head>
   <body>
-    <table>
-      <thead>
-        <tr><th>Text</th><th>Status</th><th>RTs</th><th>Favs</th><th>At</th></tr>
-      </thead>
-      <tbody>
 % tweets_chunk.each do |tweet|
-        <tr><td class="tweet_text"><%= expand_fulltext(tweet) %></td><td><a href="https://twitter.com/<%= screen_name %>/status/<%= tweet["tweet"]["id"] %>"><%= tweet["tweet"]["id"] %></a></td><td><%= tweet["tweet"]["retweet_count"] %></td><td><%= tweet["tweet"]["favorite_count"] %></td><td><%= tweet["tweet"]["created_at"] %></td></tr>
+    <table>
+      <tbody>
+        <tr class="tweet_head"><td><a href="https://twitter.com/<%= screen_name %>/status/<%= tweet["tweet"]["id"] %>"><%= tweet["tweet"]["id"] %></a> <span class="counts"><%= tweet["tweet"]["retweet_count"] %></span> RTs <span class="counts"><%= tweet["tweet"]["favorite_count"] %></span> Favs at <%= localtime(tweet) %></td></tr>
+        <tr><td class="tweet_text"><%= expand_fulltext(tweet) %></td></tr>
 %   if tweet["tweet"]["entities"] && tweet["tweet"]["entities"]["media"] && !tweet["tweet"]["entities"]["media"].empty?
-      <tr>
+        <tr>
 %     tweet["tweet"]["entities"]["media"].each do |media|
 %       fx = File.extname(media["media_url"].sub(%r:.*/:, ""))
 %       if %w:webm mp4 mkv:.include?(fx)
-          <td colspan="4"><video controls="controls"><source src="file:///<%= Dir.pwd.sub(%r:^/:, "") %>/tweet_media/<%= tweet["tweet"]["id"] %>-<%= media["media_url"].sub(%r:.*/:, "") %>" type="video/<%= fx %>"/></source></video></td>
+          <td><video controls="controls"><source src="file:///<%= Dir.pwd.sub(%r:^/:, "") %>/tweet_media/<%= tweet["tweet"]["id"] %>-<%= media["media_url"].sub(%r:.*/:, "") %>" type="video/<%= fx %>"/></source></video></td>
 %       else
-          <td colspan="4"><img src="file:///<%= Dir.pwd.sub(%r:^/:, "") %>/tweet_media/<%= tweet["tweet"]["id"] %>-<%= media["media_url"].sub(%r:.*/:, "") %>" style="max-height: 300px;"/></td>
+          <td><img src="file:///<%= Dir.pwd.sub(%r:^/:, "") %>/tweet_media/<%= tweet["tweet"]["id"] %>-<%= media["media_url"].sub(%r:.*/:, "") %>" style="max-height: 300px;"/></td>
 %       end
 %     end
       </tr>
 %   end
-% end
       </tbody>
     </table>
+% end
   </body>
 </html>
 EOF
@@ -46,12 +56,20 @@ def expand_fulltext(tweet)
   if tweet["tweet"]["entities"]["urls"] && !tweet["tweet"]["entities"]["urls"].empty?
     text = tweet["tweet"]["full_text"]
     tweet["tweet"]["entities"]["urls"].each do |url|
-      text = text.sub(url["url"], sprintf('<a href="%s">%s</a>', url["expended_url"], url["display_url"]))
+      text = text.sub(url["url"], sprintf('<a href="%s">%s</a>', url["expanded_url"], url["display_url"]))
     end
     text
   else
     tweet["tweet"]["full_text"]
   end
+end
+
+@tz_offset = DateTime.now.offset
+
+def localtime(tweet)
+  odt = DateTime.parse tweet["tweet"]["created_at"]
+  local_dt = odt.new_offset(@tz_offset)
+  return local_dt.strftime('%F %T %z')
 end
 
 opt = OptionParser.new
