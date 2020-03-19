@@ -22,15 +22,15 @@ TEMPLATE = <<'EOF'
       </thead>
       <tbody>
 % tweets_chunk.each do |tweet|
-        <tr><td class="tweet_text"><%= expand_fulltext(tweet) %></td><td><a href="https://twitter.com/<%= screen_name %>/status/<%= tweet["id"] %>"><%= tweet["id"] %></a></td><td><%= tweet["retweet_count"] %></td><td><%= tweet["favorite_count"] %></td><td><%= tweet["created_at"] %></td></tr>
-%   if tweet["entities"] && tweet["entities"]["media"] && !tweet["entities"]["media"].empty?
+        <tr><td class="tweet_text"><%= expand_fulltext(tweet) %></td><td><a href="https://twitter.com/<%= screen_name %>/status/<%= tweet["tweet"]["id"] %>"><%= tweet["tweet"]["id"] %></a></td><td><%= tweet["tweet"]["retweet_count"] %></td><td><%= tweet["tweet"]["favorite_count"] %></td><td><%= tweet["tweet"]["created_at"] %></td></tr>
+%   if tweet["tweet"]["entities"] && tweet["tweet"]["entities"]["media"] && !tweet["tweet"]["entities"]["media"].empty?
       <tr>
-%     tweet["entities"]["media"].each do |media|
+%     tweet["tweet"]["entities"]["media"].each do |media|
 %       fx = File.extname(media["media_url"].sub(%r:.*/:, ""))
 %       if %w:webm mp4 mkv:.include?(fx)
-          <td colspan="4"><video controls="controls"><source src="file:///<%= Dir.pwd.sub(%r:^/:, "") %>/tweet_media/<%= tweet["id"] %>-<%= media["media_url"].sub(%r:.*/:, "") %>" type="video/<%= fx %>"/></source></video></td>
+          <td colspan="4"><video controls="controls"><source src="file:///<%= Dir.pwd.sub(%r:^/:, "") %>/tweet_media/<%= tweet["tweet"]["id"] %>-<%= media["media_url"].sub(%r:.*/:, "") %>" type="video/<%= fx %>"/></source></video></td>
 %       else
-          <td colspan="4"><img src="file:///<%= Dir.pwd.sub(%r:^/:, "") %>/tweet_media/<%= tweet["id"] %>-<%= media["media_url"].sub(%r:.*/:, "") %>" style="max-height: 300px;"/></td>
+          <td colspan="4"><img src="file:///<%= Dir.pwd.sub(%r:^/:, "") %>/tweet_media/<%= tweet["tweet"]["id"] %>-<%= media["media_url"].sub(%r:.*/:, "") %>" style="max-height: 300px;"/></td>
 %       end
 %     end
       </tr>
@@ -43,14 +43,14 @@ TEMPLATE = <<'EOF'
 EOF
 
 def expand_fulltext(tweet)
-  if tweet["entities"]["urls"] && !tweet["entities"]["urls"].empty?
-    text = tweet["full_text"]
-    tweet["entities"]["urls"].each do |url|
+  if tweet["tweet"]["entities"]["urls"] && !tweet["tweet"]["entities"]["urls"].empty?
+    text = tweet["tweet"]["full_text"]
+    tweet["tweet"]["entities"]["urls"].each do |url|
       text = text.sub(url["url"], sprintf('<a href="%s">%s</a>', url["expended_url"], url["display_url"]))
     end
     text
   else
-    tweet["full_text"]
+    tweet["tweet"]["full_text"]
   end
 end
 
@@ -95,19 +95,19 @@ twdata = File.read("tweet.js").sub(/\A.*? = /, "")
 tweets = JSON.load(twdata)
 
 if mode == :rt && limit > 0
-  tweets.delete_if {|i| i["retweet_count"].to_i <= limit }
+  tweets.delete_if {|i| i["tweet"]["retweet_count"].to_i <= limit }
 end
 if mode == :fv && limit > 0
-  tweets.delete_if {|i| i["favorite_count"].to_i <= limit }
+  tweets.delete_if {|i| i["tweet"]["favorite_count"].to_i <= limit }
 end
-tweets.delete_if {|i| !(i["entities"] && i["entities"]["media"] && !i["entities"]["media"].empty?) } if require_media
-tweets.delete_if {|i| i["full_text"] =~ /\ART @[a-zA-Z0-9_]+:/ && !i["entities"]["user_mentions"].empty? } if non_rt
-tweets.delete_if {|i| i["in_reply_to_user_id"] && !i["in_reply_to_user_id"].empty? } if non_reply
+tweets.delete_if {|i| !(i["tweet"]["entities"] && i["tweet"]["entities"]["media"] && !i["tweet"]["entities"]["media"].empty?) } if require_media
+tweets.delete_if {|i| i["tweet"]["full_text"] =~ /\ART @[a-zA-Z0-9_]+:/ && !i["tweet"]["entities"]["user_mentions"].empty? } if non_rt
+tweets.delete_if {|i| i["tweet"]["in_reply_to_user_id"] && !i["tweet"]["in_reply_to_user_id"].empty? } if non_reply
 
-tweets.delete_if {|i| !(words.any? {|w| i["full_text"].downcase.include?(w.downcase) }) } unless words.empty?
+tweets.delete_if {|i| !(words.any? {|w| i["tweet"]["full_text"].downcase.include?(w.downcase) }) } unless words.empty?
 
-tweets.sort_by! {|i| i["retweet_count"].to_i }.reverse! if mode == :rt
-tweets.sort_by! {|i| i["retweet_count"].to_i }.reverse! if mode == :fv
+tweets.sort_by! {|i| i["tweet"]["retweet_count"].to_i }.reverse! if mode == :rt
+tweets.sort_by! {|i| i["tweet"]["favorite_count"].to_i }.reverse! if mode == :fv
 
 if headnum
   tweets = tweets[0, headnum]
